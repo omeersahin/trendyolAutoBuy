@@ -1,4 +1,3 @@
-from itertools import product
 import time
 from selenium import webdriver
 from selenium.webdriver.common.by import By
@@ -71,10 +70,7 @@ if __name__ == "__main__":
     # En sonunda da sepet kısmına gider.	
     products = excel_read()
     for i in products:
-        if ''.join(i).find('---') != -1:
-            add_product('--------')
-        else:
-            add_product(''.join(i)) # '(birlestirilmesi istenen char)'.join((birlesecek ogeler)) ->> '.'.join(['ab', 'pq', 'rs']) -> 'ab.pq.rs'
+        add_product(''.join(i)) # '(birlestirilmesi istenen char)'.join((birlesecek ogeler)) ->> '.'.join(['ab', 'pq', 'rs']) -> 'ab.pq.rs'
     time.sleep(2)
     driver.get('https://www.trendyol.com/sepet')
 	# -----------------------------------------------------------------------------	
