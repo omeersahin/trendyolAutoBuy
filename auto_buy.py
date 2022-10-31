@@ -3,7 +3,7 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 import pandas as pd
 
-# Excel verilerini okunup list haline getirildiği fonksiyon bloğu																   
+# Excel verilerini okunup list haline getirildiği fonksiyon bloğu
 def excel_read():
     df = pd.read_excel('keywords.xlsx', sheet_name='Sheet1')
     product_list = df.values.tolist()
@@ -18,7 +18,7 @@ def webOptions():
     return customOptions
 
 # Bütün ürünlerin bulunduğu ana ekranda sepete ekle butonu bulunmadığı takdirde sayfaya yönlendirme yapılıp
-# ürün sayfasında sepete ekleme işleminin yapıldığı fonksiyon bloğu.																													  																			 
+# ürün sayfasında sepete ekleme işleminin yapıldığı fonksiyon bloğu.
 def go_product_page(path):
 
     try:
@@ -29,16 +29,16 @@ def go_product_page(path):
         # /html/body/div[1]/div[5]/main/div/div[2]/div[1]/div[2]/div[2]/div[5]/button
         #                                                               ------ 
         # Ürün sayfaları değişiklik gösterebildiğinden dolayı bir 5-7 arasından bulunmaktadır.																	  
-        add_to_basket = driver.find_element(By.XPATH,"/html/body/div[1]/div[5]/main/div/div[2]/div[1]/div[2]/div[2]/div[7]/button")
+        add_to_basket = driver.find_element(By.XPATH,"/html/body/div[1]/div[5]/main/div/div[2]/div[1]/div[2]/div[2]/div[5]/button")
     except:
-        print("There is not add to basket button at div[7]")
+        print("There is not add to basket button at div[5] ")
         try:
             add_to_basket = driver.find_element(By.XPATH,"/html/body/div[1]/div[5]/main/div/div[2]/div[1]/div[2]/div[2]/div[6]/button")
         except:
-            print("There is not add to basket button at div[6]")
-            add_to_basket = driver.find_element(By.XPATH,"/html/body/div[1]/div[5]/main/div/div[2]/div[1]/div[2]/div[2]/div[5]/button")                                        
-    add_to_basket.click()   # Sepete ekleme butonuna tıklar.
-    
+            print("There is not add to basket button at div[6] ")
+            add_to_basket = driver.find_element(By.XPATH,"/html/body/div[1]/div[5]/main/div/div[2]/div[1]/div[2]/div[2]/div[7]/button")                                        
+    add_to_basket.click()# Sepete ekleme butonuna tıklar.
+
 # Ürün ekleme fonksiyon bloğu.
 # Bazı elementleri Class ismi bazılarını Xpath ile bulmaktadır.								 																	
 def add_product(product_name):
@@ -56,31 +56,29 @@ def add_product(product_name):
                 # Bazı sayfalarda ürün tanıtımı yapıldığı için overlay üzerine bir tıklama yapılması gerekebilmektedir.
                 overlay = driver.find_element(By.CLASS_NAME,"overlay")
                 overlay.click()
-                # -----------------------------------------------------------------------------------------------------																				   
+                # ---------------------------------------------------------------
             except:
                 print("Overlay Element Not Found")
 
             time.sleep(0.5)
-            try:
-                add_to_basket = driver.find_element(By.XPATH,           "/html/body/div[1]/div[3]/div[2]/div[2]/div/div/div/div[1]/div[2]/div[3]/div[1]/div/div[2]/div[1]/div[2]/button")                                                    
-                add_to_basket.click()                                               
-            except:
-                print("There is no Add to Basket Button at div[3]")
+            index = 2
+            while True:
                 try:
-                    add_to_basket = driver.find_element(By.XPATH,       "/html/body/div[1]/div[3]/div[2]/div[2]/div/div/div/div[1]/div[2]/div[4]/div[1]/div/div[2]/div[1]/div[2]/button")
+                    add_to_basket = driver.find_element(By.XPATH,"/html/body/div[1]/div[3]/div[2]/div[2]/div/div/div/div[1]/div[2]/div["+str(index)+"]/div[1]/div/div[2]/div[1]/div[2]/button")                                                    
                     add_to_basket.click()
+                    break
                 except:
-                    print("There is no Add to Basket Button at div[4]")
-                    try:
-                        add_to_basket = driver.find_element(By.XPATH,   "/html/body/div[1]/div[3]/div[2]/div[2]/div/div/div/div[1]/div[2]/div[5]/div[1]/div/div[2]/div[1]/div[2]/button")
-                        add_to_basket.click()
-                    except:
-                        print("There is no Add to Basket Button")
+                    if index == 5:
+                        print("There is no Add to Basket Button" )
                         try:
                             go_product_page("/html/body/div[1]/div[3]/div[2]/div[2]/div/div/div/div[1]/div[2]/div[5]/div[1]/div/div[2]/div[1]/a")
                         except:
                             print("Product URL not found at div[5]")
                             go_product_page("/html/body/div[1]/div[3]/div[2]/div[2]/div/div/div/div[1]/div[2]/div[4]/div[1]/div/div[2]/div[1]/a")
+                        break
+                    else: 
+                        index+=1
+                        pass      
         except:
             print("There is no such element")
 
@@ -97,7 +95,7 @@ if __name__ == "__main__":
     driver = webdriver.Chrome(options=chrome_options)
 	# ----------------------------------------------------								   
     # Excelden okunan anahtar kelimeler sırasıyla ürün ekleme işlemi yapılmaktadır.
-    # En sonunda da sepet kısmına gidilmektedir.																						  											  
+    # En sonunda da sepet kısmına gidilmektedir.	
     products = excel_read()
     for i in products:
         if ''.join(i).find('-') != -1:
@@ -106,8 +104,7 @@ if __name__ == "__main__":
             add_product(''.join(i))
     time.sleep(2)
     driver.get('https://www.trendyol.com/sepet')
-	# -----------------------------------------------------------------------------																			   
-
+	# -----------------------------------------------------------------------------	
 
     time.sleep(2)
     driver.quit()# Chromiumu kapatır.
