@@ -15,11 +15,6 @@ def read_config():
     regular_delay =     float(config['Ayarlar']['duzenli_gecikme'])
     error_page_delay =  float(config['Ayarlar']['hata_sayfasi_gecikme'])
     drive_quit_delay =  float(config['Ayarlar']['chrome_kapat_gecikme'])
-    print(cart)
-    print(drive_quit)
-    print(regular_delay)
-    print(error_page_delay)
-    print(drive_quit_delay)
 
     return cart, drive_quit, regular_delay, error_page_delay, drive_quit_delay
 
