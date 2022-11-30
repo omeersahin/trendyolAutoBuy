@@ -10,13 +10,15 @@ from configparser import ConfigParser
 def read_config():
     config = ConfigParser()
     config.read('config.cfg')
-    cart =              bool(int(config['Ayarlar']['sepeti_goster']))
-    drive_quit =        bool(int(config['Ayarlar']['chrome_kapat']))
-    regular_delay =     float(config['Ayarlar']['duzenli_gecikme'])
+    cart             =  bool(int(config['Ayarlar']['sepeti_goster']))
+    drive_quit       =  bool(int(config['Ayarlar']['chrome_kapat']))
+    regular_delay    =  float(config['Ayarlar']['duzenli_gecikme'])
     error_page_delay =  float(config['Ayarlar']['hata_sayfasi_gecikme'])
     drive_quit_delay =  float(config['Ayarlar']['chrome_kapat_gecikme'])
+    sort             =  int(config['Ayarlar']['siralama'])
+    free_shipment    =  bool(int(config['Ayarlar']['kargo_bedava']))
 
-    return cart, drive_quit, regular_delay, error_page_delay, drive_quit_delay
+    return cart, drive_quit, regular_delay, error_page_delay, drive_quit_delay, sort, free_shipment
 
 # Excel verilerini okunup list haline getirildiği fonksiyon bloğu.
 def excel_read():
@@ -33,6 +35,7 @@ def webOptions():
     customOptions.add_argument("--disable-notifications") # Uyarı ve Bildirimlerin Kapatılması
     customOptions.add_argument("--disable-popup-blocking")# Pop-Upların kapatılması
     customOptions.add_argument("--start-maximized")       # Tam Ekran yapılması
+    customOptions.add_argument('log-level=3')             # SSL Handshake hatasını loglaması önlemek için.
     return customOptions
 
 # Bütün ürünlerin bulunduğu ana ekranda sepete ekle butonu bulunmadığı takdirde sayfaya yönlendirme yapılıp
@@ -50,12 +53,31 @@ def go_product_page(path,delay):
 
 # Ürün ekleme fonksiyon bloğu.
 # Bazı elementleri Class ismi bazılarını Xpath ile bulmaktadır.								 																	
-def add_product(product_name,delay):
+def add_product(product_name,delay,sort,free_shipment):
     logging.info("Trying to buy " + product_name)
     try:
         driver.get('https://www.trendyol.com/sr?q='+str(product_name)+'&qt='+str(product_name)+'&st='+str(product_name)+'&os=1')
         if driver.find_element(By.XPATH,'//*[@id="search-app"]').get_attribute('id') == 'search-app':
-            driver.get('https://www.trendyol.com/sr?q='+str(product_name)+'&qt='+str(product_name)+'&st='+str(product_name)+'&os=1&fc=true&sst=MOST_RATED')
+            free_shipment_string = ""
+            if free_shipment:
+                free_shipment_string = "&fc=true"
+
+            sort_string = 'MOST_RATED'
+            if sort == 0:
+                sort_string = 'MOST_RATED'
+            elif sort == 1:
+                sort_string = 'PRICE_BY_ASC'
+            elif sort == 2:
+                sort_string = 'PRICE_BY_DESC'
+            elif sort == 3:
+                sort_string = 'BEST_SELLER'
+            elif sort == 4:
+                sort_string = 'MOST_FAVOURITE'
+            elif sort == 5:
+                sort_string = 'MOST_RECENT'
+
+
+            driver.get('https://www.trendyol.com/sr?q='+str(product_name)+'&qt='+str(product_name)+'&st='+str(product_name)+'&os=1'+free_shipment_string+'&sst='+sort_string)
             time.sleep(delay)
             try:
                 # Bazı sayfalarda ürün tanıtımı yapıldığı için overlay üzerine bir tıklama yapılması gerekebilmektedir.
@@ -98,13 +120,13 @@ if __name__ == "__main__":
         logging.critical("Chrome not started.")
 	# ----------------------------------------------------	
     # 
-    [cart, drive_quit, regular_delay, error_page_delay, drive_quit_delay]=read_config()	
+    [cart, drive_quit, regular_delay, error_page_delay, drive_quit_delay, sort, free_shipment]=read_config()	
     # ----------------------------------------------------								   
     # Excelden okunan anahtar kelimeler sırasıyla ürün ekleme işlemi yapılır.
     # En sonunda da sepet kısmına gider.
     products = excel_read()
     for i in products:
-        add_product(''.join(i),regular_delay) # '(birlestirilmesi istenen char)'.join((birlesecek ogeler)) ->> '.'.join(['ab', 'pq', 'rs']) -> 'ab.pq.rs'
+        add_product(''.join(i),regular_delay,sort,free_shipment) # '(birlestirilmesi istenen char)'.join((birlesecek ogeler)) ->> '.'.join(['ab', 'pq', 'rs']) -> 'ab.pq.rs'
     time.sleep(error_page_delay)
     if cart:
         driver.get("https://www.trendyol.com/sepet")
